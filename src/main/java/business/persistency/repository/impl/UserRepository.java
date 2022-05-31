@@ -1,4 +1,4 @@
-package business.persistency.repository;
+package business.persistency.repository.impl;
 
 import business.persistency.entity.UserDAO;
 import io.quarkus.mongodb.panache.PanacheMongoRepository;
