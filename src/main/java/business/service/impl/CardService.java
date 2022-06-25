@@ -19,10 +19,7 @@ public class CardService {
     @Inject
     CardMapper cardMapper;
 
-
-
-
-    public List<CardTO> getAllCards() throws NotImplementedException {
+    public List<CardTO> getAllCards(){
         var cards = cardRepository.findAllCards();
         return cards.stream().map(e->cardMapper.toResource(e)).collect(Collectors.toList());
     }

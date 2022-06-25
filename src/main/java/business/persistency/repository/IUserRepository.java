@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface IUserRepository {
     UserDAO getUserById(ObjectId id);
+    void save(UserDAO user);
 }

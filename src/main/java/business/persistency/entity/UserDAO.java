@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @MongoEntity(collection="User")
 public class UserDAO  {
-    public ObjectId id; // used by MongoDB for the _id field
+    public ObjectId id;
     public String nickname;
     public LocalDate createdAt;
     public int wins;

@@ -19,8 +19,6 @@ public class CachedGameRepository implements IGameRepository {
     @Inject
     GameRepository gameRepository;
 
-    @Inject
-    Vertx vertx;
 
     @Override
     public GameDAO findGameById(ObjectId id) {
@@ -33,10 +31,7 @@ public class CachedGameRepository implements IGameRepository {
     @Override
     public void saveGame(GameDAO game) {
         gameRepository.saveGame(game);
-        //TODO: experimental, should check on thread safety
-        vertx.executeBlocking(promise -> {
-            cacheProvider.set(CacheConstants.GAME + game.id.toString(), game, GameDAO.class);
-        });
+        cacheProvider.set(CacheConstants.GAME + game.id.toString(), game, GameDAO.class);
 
 
     }

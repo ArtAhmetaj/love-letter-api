@@ -3,19 +3,23 @@ package business.util;
 import business.persistency.entity.CardDAO;
 import com.arjuna.ats.jta.exceptions.NotImplementedException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 public class CardUtils {
     private static final int MAX_CARDS = 32;
 
-    private static int getRandomCardNumber(){
+    private static int getRandomCardNumber(int currentCards){
         Random random = new Random();
-        return random.nextInt(MAX_CARDS);
+        return random.nextInt(currentCards);
     }
 
-    public static List<CardDAO> shuffleCards(List<CardDAO> allCards) throws NotImplementedException {
-        throw  new NotImplementedException();
+    public static CardDAO giveCardToPlayer(List<CardDAO> allCards) {
+        Collections.shuffle(allCards);
+        return allCards.get(getRandomCardNumber(allCards.size()));
     }
+
+
 
 }

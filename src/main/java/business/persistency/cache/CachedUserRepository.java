@@ -21,4 +21,12 @@ public class CachedUserRepository implements IUserRepository {
         if(user !=null) return user;
         return userRepository.getUserById(id);
     }
+
+    @Override
+    public void save(UserDAO user) {
+        cacheProvider.set(CacheConstants.USER+user.id.toString(),user,UserDAO.class);
+        userRepository.save(user);
+
+
+    }
 }

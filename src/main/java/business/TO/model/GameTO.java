@@ -1,20 +1,19 @@
-package business.persistency.entity;
+package business.TO.model;
 
-import io.quarkus.mongodb.panache.common.MongoEntity;
+import business.persistency.entity.RoundDAO;
 import org.bson.types.ObjectId;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@MongoEntity(collection="Game")
-public class GameDAO {
+public class GameTO implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     public ObjectId id;
     public LocalDateTime createdAt;
     public int numberOfPlayers;
     public LocalDateTime completedAt;
-
-    public List<CardDAO> cardsInShuffle;
-    public List<ObjectId> eliminatedPlayers;
     public ObjectId creator;
     public ObjectId winner;
     public List<RoundDAO> rounds;

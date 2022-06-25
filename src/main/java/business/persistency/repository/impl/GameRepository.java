@@ -17,6 +17,7 @@ public class GameRepository implements PanacheMongoRepository<GameDAO>, IGameRep
 
     @Override
     public void saveGame(GameDAO game) {
+
         persist(game);
     }
 }

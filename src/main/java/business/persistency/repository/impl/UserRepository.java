@@ -6,7 +6,6 @@ import io.quarkus.mongodb.panache.PanacheMongoRepository;
 import org.bson.types.ObjectId;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.List;
 
 @ApplicationScoped
 public class UserRepository implements PanacheMongoRepository<UserDAO>, IUserRepository {
