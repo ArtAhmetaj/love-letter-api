@@ -4,7 +4,8 @@ import business.TO.mapper.CardMapper;
 import business.TO.mapper.UserMapper;
 import business.TO.model.CardTO;
 import business.TO.model.UserTO;
-import business.exceptions.server.PlayersNotMatchingSizeException;
+import business.exceptions.models.business.CardNotFoundException;
+import business.exceptions.models.server.PlayersNotMatchingSizeException;
 import business.persistency.cache.CachedUserRepository;
 import org.bson.types.ObjectId;
 
@@ -65,12 +66,23 @@ public class UserService {
 
     public void changeCard(ObjectId userId,CardTO newCard){
         var user = userRepository.getUserById(userId);
+        user.currentGame.cards.clear();
         user.currentGame.cards.add(cardMapper.fromResource(newCard));
         userRepository.save(user);
     }
 
-    public void tradeCards(ObjectId userId, ObjectId initiatorId){
-        throw new UnsupportedOperationException();
+    public void tradeCards(ObjectId userId, ObjectId initiatedCard, ObjectId attackedUserId){
+        var initiator = userRepository.getUserById(userId);
+        var attackedUser = userRepository.getUserById(attackedUserId);
+
+        var temp = initiator.currentGame.cards.stream().filter(e->e.id==initiatedCard).findFirst();
+        if(temp.isEmpty()) throw new CardNotFoundException();
+        initiator.currentGame.cards.set(0,attackedUser.currentGame.cards.get(0));
+        attackedUser.currentGame.cards.set(0,temp.get());
+        userRepository.save(initiator);
+        userRepository.save(attackedUser);
+
+
     }
 
 

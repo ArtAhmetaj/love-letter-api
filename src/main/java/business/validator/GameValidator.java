@@ -1,7 +1,7 @@
 package business.validator;
 
 import business.TO.model.GameTO;
-import business.exceptions.business.PlayerNotPartOfGameException;
+import business.exceptions.models.business.PlayerNotPartOfGameException;
 import org.bson.types.ObjectId;
 
 public class GameValidator {

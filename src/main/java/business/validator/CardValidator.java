@@ -2,8 +2,8 @@ package business.validator;
 
 import business.TO.model.CardNameTO;
 import business.TO.model.CardTO;
-import business.exceptions.business.CardNotFoundException;
-import business.exceptions.business.MustThrowCountessException;
+import business.exceptions.models.business.CardNotFoundException;
+import business.exceptions.models.business.MustThrowCountessException;
 
 import java.util.List;
 

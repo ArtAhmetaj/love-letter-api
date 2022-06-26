@@ -1,4 +1,4 @@
-package business.exceptions.business;
+package business.exceptions.models.business;
 
 public class MustThrowCountessException extends BusinessException {
     public MustThrowCountessException(){

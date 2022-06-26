@@ -10,4 +10,6 @@ public class UserTO implements Serializable {
     public ObjectId id;
     public String nickname;
     public int wins;
+    public String accessToken;
+
 }

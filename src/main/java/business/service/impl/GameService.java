@@ -4,7 +4,7 @@ import business.TO.mapper.CardMapper;
 import business.TO.mapper.GameMapper;
 import business.TO.model.GameTO;
 import business.TO.model.UserTO;
-import business.exceptions.business.HandMaidCanNotBeAttackedException;
+import business.exceptions.models.business.HandMaidCanNotBeAttackedException;
 import business.persistency.cache.CachedGameRepository;
 import business.util.CardUtils;
 import business.util.GameUtils;
@@ -78,6 +78,10 @@ public class GameService {
             currentRound.currentActivePlayer = game.players.get(game.players.indexOf(currentRound.currentActivePlayer) + 1);
         }
 
+        var card = CardUtils.giveCardToPlayer(game.cardsInShuffle);
+        game.cardsInShuffle.remove(card);
+        userService.changeCard(currentRound.currentActivePlayer, cardMapper.toResource(card));
+
         gameRepository.saveGame(game);
         return gameMapper.toResource(game);
     }
@@ -115,8 +119,8 @@ public class GameService {
     }
 
     public GameTO tradeCards(ObjectId gameId, ObjectId userId, ObjectId attackedUserId, ObjectId cardId) {
-        var game = gameRepository.findGameById(gameId);
-        userService.tradeCards(userId,attackedUserId);
+        // currently feels like a plain userService method, changes could be necessary so leaving it here for the moment
+        userService.tradeCards(userId, attackedUserId, cardId);
         return continueToNextPlayer(gameId, cardId);
     }
 

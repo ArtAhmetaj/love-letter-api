@@ -15,7 +15,7 @@ public class UserResource {
 
     @Query
     @Description("Get User by Id")
-    public UserTO getGameById(@Name("userId") ObjectId id) {
+    public UserTO getUserById(@Name("userId") ObjectId id) {
         return userService.getUserById(id);
     }
 
