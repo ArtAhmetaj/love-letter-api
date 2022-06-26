@@ -8,4 +8,5 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "cdi")
 public interface CardMapper {
     CardTO toResource(CardDAO card);
+    CardDAO fromResource(CardTO card);
 }

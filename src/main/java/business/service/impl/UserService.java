@@ -4,7 +4,7 @@ import business.TO.mapper.CardMapper;
 import business.TO.mapper.UserMapper;
 import business.TO.model.CardTO;
 import business.TO.model.UserTO;
-import business.persistency.cache.CachedCardRepository;
+import business.exceptions.server.PlayersNotMatchingSizeException;
 import business.persistency.cache.CachedUserRepository;
 import org.bson.types.ObjectId;
 
@@ -39,10 +39,38 @@ public class UserService {
         return user.currentGame.cards.stream().map(cardMapper::toResource).collect(Collectors.toList());
     }
 
-    //TODO: check if graphql supports just id and not whole object here
-    public int getCurrentWins(UserTO user){
+    public int getCurrentWins(UserTO user) {
         var currentUser = userRepository.getUserById(user.id);
         return currentUser.wins;
+    }
+
+
+    public void removeUsedCard(ObjectId userId, ObjectId cardId) {
+        var user = userRepository.getUserById(userId);
+        user.currentGame.cards.removeIf(e -> e.id == cardId);
+        userRepository.save(user);
+
+    }
+
+    public void shuffleCards(List<ObjectId> players, List<CardTO> cards) {
+        //TODO: add hashmap and add native query for updates
+        if (players.size() != cards.size()) throw new PlayersNotMatchingSizeException();
+        for(int i =0;i<players.size();i++){
+            var player = userRepository.getUserById(players.get(i));
+            player.currentGame.cards.clear();
+            player.currentGame.cards.add(cardMapper.fromResource(cards.get(i)));
+            userRepository.save(player);
+        }
+    }
+
+    public void changeCard(ObjectId userId,CardTO newCard){
+        var user = userRepository.getUserById(userId);
+        user.currentGame.cards.add(cardMapper.fromResource(newCard));
+        userRepository.save(user);
+    }
+
+    public void tradeCards(ObjectId userId, ObjectId initiatorId){
+        throw new UnsupportedOperationException();
     }
 
 

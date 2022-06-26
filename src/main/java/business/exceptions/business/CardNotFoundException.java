@@ -1,4 +1,4 @@
-package business.exceptions;
+package business.exceptions.business;
 
 public class CardNotFoundException extends BusinessException{
     public CardNotFoundException() {

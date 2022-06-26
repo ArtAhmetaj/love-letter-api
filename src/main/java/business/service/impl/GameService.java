@@ -1,14 +1,11 @@
 package business.service.impl;
 
+import business.TO.mapper.CardMapper;
 import business.TO.mapper.GameMapper;
-import business.TO.model.CardTO;
 import business.TO.model.GameTO;
 import business.TO.model.UserTO;
-import business.exceptions.HandMaidCanNotBeAttackedException;
+import business.exceptions.business.HandMaidCanNotBeAttackedException;
 import business.persistency.cache.CachedGameRepository;
-import business.persistency.cache.CachedUserRepository;
-import business.persistency.entity.UserDAO;
-import business.persistency.repository.impl.UserRepository;
 import business.util.CardUtils;
 import business.util.GameUtils;
 import org.bson.types.ObjectId;
@@ -23,11 +20,15 @@ public class GameService {
     @Inject
     CachedGameRepository gameRepository;
 
+
     @Inject
-    CachedUserRepository userRepository;
+    UserService userService;
 
     @Inject
     GameMapper gameMapper;
+
+    @Inject
+    CardMapper cardMapper;
 
 
     public GameTO getGameById(ObjectId id) {
@@ -35,10 +36,10 @@ public class GameService {
         return gameMapper.toResource(gameDAO);
     }
 
-    public GameTO createGame(GameTO game){
+    public GameTO createGame(GameTO game) {
         var gameEntity = gameMapper.fromResource(game);
         gameRepository.saveGame(gameEntity);
-        return  gameMapper.toResource(gameEntity);
+        return gameMapper.toResource(gameEntity);
     }
 
     public GameTO addPlayerToGame(UserTO user, ObjectId gameId) {
@@ -60,40 +61,28 @@ public class GameService {
     }
 
 
-    public GameTO continueToNextPlayer(ObjectId gameId,ObjectId cardId) {
+    public GameTO continueToNextPlayer(ObjectId gameId, ObjectId cardId) {
         var game = gameRepository.findGameById(gameId);
         var currentRound = game.rounds.get(game.rounds.size() - 1);
         if (currentRound.currentActivePlayer == game.players.get(game.players.size() - 1)) {
             // if last player is putting card, shuffle cards and set currentplayer to 0
             currentRound.currentActivePlayer = game.players.get(0);
             currentRound.handMaidPlayer = null;
-            // shuffle cards
-            //TODO: dont do this, offloda as much as possible in userService Layer
-            var players = game.players.stream().map(e -> userRepository.getUserById(e)).collect(Collectors.toList());
-            for (UserDAO player : players) {
-                var currentGame = player.currentGame;
-                currentGame.cards.clear();
-                var shuffledCard = CardUtils.giveCardToPlayer(game.cardsInShuffle);
-                currentGame.cards.add(shuffledCard);
-                game.cardsInShuffle.remove(shuffledCard);
-                userRepository.save(player);
-            }
+            var cards = CardUtils.getCardsForNewRound(game.cardsInShuffle, game.players.size());
+            game.cardsInShuffle.removeAll(cards);
+            //TODO: better to send map, either way order will be maintained
+            userService.shuffleCards(game.players, cards.stream().map(e -> cardMapper.toResource(e)).collect(Collectors.toList()));
 
         } else {
-            var player = userRepository.getUserById(currentRound.currentActivePlayer);
-            player.currentGame.cards.removeIf(e->e.id==cardId);
-            //TODO: add card back in shuffle
-            userRepository.save(player);
+            userService.removeUsedCard(currentRound.currentActivePlayer, cardId);
             currentRound.currentActivePlayer = game.players.get(game.players.indexOf(currentRound.currentActivePlayer) + 1);
         }
 
         gameRepository.saveGame(game);
         return gameMapper.toResource(game);
-
-
     }
 
-    public GameTO eliminatePlayer(ObjectId gameId, ObjectId userId,ObjectId cardId) {
+    public GameTO eliminatePlayer(ObjectId gameId, ObjectId userId, ObjectId cardId) {
         var game = gameRepository.findGameById(gameId);
         if (game.rounds.get(game.rounds.size() - 1).handMaidPlayer == userId)
             throw new HandMaidCanNotBeAttackedException();
@@ -105,47 +94,36 @@ public class GameService {
             return gameMapper.toResource(game);
         }
         gameRepository.saveGame(game);
-        return continueToNextPlayer(gameId,cardId);
+        return continueToNextPlayer(gameId, cardId);
     }
 
-    public GameTO makePlayerImmune(ObjectId gameId, ObjectId userId,ObjectId cardId) {
+    public GameTO makePlayerImmune(ObjectId gameId, ObjectId userId, ObjectId cardId) {
         var game = gameRepository.findGameById(gameId);
         var currentRound = game.rounds.get(game.rounds.size() - 1);
         currentRound.handMaidPlayer = userId;
         gameRepository.saveGame(game);
-        return continueToNextPlayer(gameId,cardId);
+        return continueToNextPlayer(gameId, cardId);
     }
 
-    //TODO: could be on user service,  'joins' on nosql fucking me up
-    public GameTO changeCard(ObjectId gameId, ObjectId userId,ObjectId cardId) {
+    public GameTO changeCard(ObjectId gameId, ObjectId userId, ObjectId cardId) {
         var game = gameRepository.findGameById(gameId);
-        var player = userRepository.getUserById(userId);
-        player.currentGame.cards.clear();
-        var shuffledCard = CardUtils.giveCardToPlayer(game.cardsInShuffle);
-        player.currentGame.cards.add(shuffledCard);
-        game.cardsInShuffle.remove(shuffledCard);
+        var newCard = CardUtils.giveCardToPlayer(game.cardsInShuffle);
+        game.cardsInShuffle.remove(newCard);
+        userService.changeCard(userId, cardMapper.toResource(newCard));
         gameRepository.saveGame(game);
-        userRepository.save(player);
-        return continueToNextPlayer(gameId,cardId);
+        return continueToNextPlayer(gameId, cardId);
     }
 
-    public GameTO tradeCards(ObjectId gameId, ObjectId userId, ObjectId attackedUserId,ObjectId cardId) {
+    public GameTO tradeCards(ObjectId gameId, ObjectId userId, ObjectId attackedUserId, ObjectId cardId) {
         var game = gameRepository.findGameById(gameId);
-        var initiator = userRepository.getUserById(userId);
-        var attackedUser = userRepository.getUserById(attackedUserId);
-        var tempInitiatorCard = initiator.currentGame.cards.get(0);
-        initiator.currentGame.cards.set(0, attackedUser.currentGame.cards.get(0));
-        attackedUser.currentGame.cards.set(0, tempInitiatorCard);
-        userRepository.save(initiator);
-        userRepository.save(attackedUser);
-        return continueToNextPlayer(gameId,cardId);
+        userService.tradeCards(userId,attackedUserId);
+        return continueToNextPlayer(gameId, cardId);
     }
 
-    public GameTO playPrincess(ObjectId gameId, ObjectId userId, ObjectId cardId){
+    public GameTO playPrincess(ObjectId gameId, ObjectId userId, ObjectId cardId) {
 
         var game = gameRepository.findGameById(gameId);
-        var initiator = userRepository.getUserById(userId);
-        return continueToNextPlayer(gameId,cardId);
+        return continueToNextPlayer(gameId, cardId);
     }
 
 

@@ -1,8 +1,8 @@
 package business.actionhandler;
 
 import business.TO.model.*;
-import business.exceptions.AttackedCardMustNotBeGuardException;
-import business.exceptions.CardNotFoundException;
+import business.exceptions.business.AttackedCardMustNotBeGuardException;
+import business.exceptions.business.CardNotFoundException;
 import business.service.impl.CardService;
 import business.service.impl.GameService;
 import business.service.impl.UserService;
